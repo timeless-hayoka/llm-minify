@@ -60,5 +60,42 @@ function test() { console.log("testing"); }
 ```
 ```
 
+## The Harness (Drop-In Wrapper)
+
+If you don't want to manually compress every prompt, you can use the built-in Harness to automatically wrap your LLM API calls.
+
+### Option 1: Decorator
+You can decorate any function that accepts `prompt` or `messages` (OpenAI format).
+
+```python
+from harness import minify_llm_args
+import openai
+
+client = openai.OpenAI()
+
+@minify_llm_args
+def generate_response(messages):
+    return client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages
+    )
+
+# The messages will automatically be minified before hitting OpenAI!
+response = generate_response([{"role": "user", "content": "Analyze this code: \n\n```python\n# test\ndef foo():\n    pass\n```"}])
+```
+
+### Option 2: Function Wrapper
+Wrap an existing library call on the fly:
+
+```python
+from harness import call_with_minification
+
+response = call_with_minification(
+    client.chat.completions.create,
+    model="gpt-4o",
+    messages=[{"role": "user", "content": long_unoptimized_payload}]
+)
+```
+
 ## Setup
-Simply drop `llm_minify.py` into your project and pass your string payloads through `compress_prompt(text)` before sending them to the LLM API.
+Simply drop `llm_minify.py` and `harness.py` into your project. You can manually pass strings through `compress_prompt(text)` or use the harness to automate it.
